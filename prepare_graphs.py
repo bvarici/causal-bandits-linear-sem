@@ -21,6 +21,14 @@ def generate_hierarchical(d=2,L=3):
     W[-1,range(d*(L-1),d*L)] = 1/np.sqrt(d)
     return A, W
 
+def generate_hierarchical_aug(d=2,L=3):
+    A, _ = generate_hierarchical(d,L)
+    N = len(A)
+    A_aug = np.zeros((N+1,N+1))
+    A_aug[1:,1:] = A
+    A_aug[1:,0] = 1
+    return A_aug
+
 def generate_enhanced_parallel(N):
     '''
     another candidate graph type:
@@ -36,4 +44,11 @@ def generate_enhanced_parallel(N):
         A[i,parent_i] = 1
 
     return A
+
+def generate_enhanced_parallel_aug(N):
+    A = generate_enhanced_parallel(N)
+    A_aug = np.zeros((N+1,N+1))
+    A_aug[1:,1:] = A
+    A_aug[1:,0] = 1
+    return A_aug
 

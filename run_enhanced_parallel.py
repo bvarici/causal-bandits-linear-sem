@@ -6,9 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle as pkl
 import multiprocessing as mp
+import os
 
 from functions_main import causal_linear_sem_TS
-from prepare_graphs import generate_enhanced_parallel
+from prepare_graphs import generate_enhanced_parallel_aug
 from config import SIMULATIONS_ESTIMATED_FOLDER
 
 
@@ -20,9 +21,9 @@ from config import SIMULATIONS_ESTIMATED_FOLDER
 # number of different graph structures to simulate
 #n_random_graphs = 1
 # number of times to sample from the true distribution prior
-n_parameter_sampling = 20
+n_parameter_sampling = 5
 # number of times to repeat the experiment for approximating data expectation
-n_repeat_data = 20
+n_repeat_data = 10
 # number of iterations, horizon.
 T = 5000
 
@@ -42,9 +43,8 @@ is_reward_intervenable = False
 
 def pool_run(N,idx):
     np.random.seed()
-    nu = np.ones(N)
     Omega = np.ones(N)
-    A = generate_enhanced_parallel(N)
+    A = generate_enhanced_parallel_aug(N)
                 
     Wobs = np.random.uniform(min_weight_abs,max_weight_abs,[len(A),len(A)])* np.random.choice([-1,1],size=[len(A),len(A)])
     Wobs[np.where(A==0)] = 0
@@ -55,8 +55,8 @@ def pool_run(N,idx):
     for i in range(N):
         parents[i] = list(np.where(Wobs[i])[0])
 
-    res = causal_linear_sem_TS(parents,Wobs,Wint,nu=nu,Omega=Omega,T=T,available_nodes=available_nodes,\
-                                  is_reward_intervenable=is_reward_intervenable,n_parameter_sampling=n_parameter_sampling,\
+    res = causal_linear_sem_TS(parents,Wobs,Wint,Omega=Omega,T=T,known_dist=False,available_nodes=available_nodes,\
+                                  is_reward_intervenable=False,n_parameter_sampling=n_parameter_sampling,\
                                       var_s=var_s,var_p=var_p,n_repeat_data=n_repeat_data)
 
     res['A'] = A
@@ -68,9 +68,22 @@ def pool_run(N,idx):
 
     return res
 
+#%%t
+# N = 5
+args_5 = [(5,i) for i in range(1,6)]
+# N = 6
+args_6 = [(6,i) for i in range(1,6)]
+# N = 7
+args_7 = [(7,i) for i in range(1,6)]
+# N = 8
+args_8 = [(8,i) for i in range(1,6)]
+# N = 9
+args_9 = [(9,i) for i in range(1,6)]
 
-# example simulations
-# args = [(5,1),(5,2),(5,3),(8,1),(8,2),(8,3)]
-# pool = mp.Pool(6)
-# results = pool.starmap(pool_run,args)
-# pool.close
+args_p = args_5+args_6+args_7+args_8+args_9
+
+if __name__ == "__main__":
+    pool = mp.Pool(12)
+    results = pool.starmap(pool_run,args_p)
+    pool.close()
+
